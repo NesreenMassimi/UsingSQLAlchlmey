@@ -5,3 +5,5 @@ djangorestframework==3.9.2
 mysql-connector-python==8.0.15
 PyMySQL==0.9.3
 sqlalchemt==1.3.2
+marshmallow == 2.19.2
+marshmallow-sqlalchemy == 0.16.2
