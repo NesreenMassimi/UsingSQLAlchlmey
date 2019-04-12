@@ -41,6 +41,7 @@ class User(Base):
     last_login=Column(DATETIME)
     created = Column(DATE)
     updated = Column(DATE)
+    #profile = relationship("UserProfile", uselist=False, back_populates="User")
 
 
 class UserEducation(Base):

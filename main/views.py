@@ -1,9 +1,12 @@
+from datetime import date
+
 from django.shortcuts import render_to_response
+from django.utils.timezone import now
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Base, Post,Speciality,User,UserEducation,UserProfile
-from alchemlyProject import settings
+from UsingAlchemly import settings
 import sqlalchemy, sqlalchemy.orm
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
@@ -18,28 +21,68 @@ engine = create_engine("mysql+pymysql://root:16001700@localhost/test")
 Session = sqlalchemy.orm.sessionmaker(bind=engine)
 session = Session()
 
-@api_view(['GET'])
+def createProfile(data,id):
+    profile = UserProfile()
+    profile.users =id
+    profile.updated = date.today()
+    profile.created = date.today()
+    profile.license_number = data['license_number']
+    profile.about = data['about']
+    profile.weight = data['weight']
+    profile.height=data['height']
+    try:
+      session.add(profile)
+      session.new
+      session.commit()
 
+    except:
+        session.rollback()
+        raise
+
+    finally:
+        session.close()
+
+@renderer_classes((JSONRenderer,))
+@api_view(['POST'])
 def createUser(request):
+    profile_data = request.data.get('profile')
+    print(profile_data)
+    user = User()
+    user.email = request.data.get('email')
+    user.first_name = request.data.get('first_name')
+    user.last_name = request.data.get('last_name')
+    user.password = request.data.get('password')
+    user.user_type = request.data.get('user_type')
+    user.created = date.today()
+    user.updated = date.today()
+    user.last_login = now()
 
-        u1 = User(
-            first_name= "nesreen",
-            last_name = "massimi",
-            email = "nmosimi@gmail.com",
-            password="12345",)
-
-        session.add(u1)
+    try:
+        session.add(user)
         session.new
         session.commit()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        profile=createProfile(profile_data, user.id)
+
+    except:
+        session.rollback()
+        raise
+
+    finally:
+        session.close()
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 @renderer_classes((JSONRenderer,))
 @api_view(['GET'])
 def listUsers(request):
+
     data =session.query(User).all()
     serializer = UserSerializer(data=data,many=True)
     if serializer.is_valid():
         serializer.save()
-    return Response(data=serializer.data,status=status.HTTP_200_OK)
+    session.close()
 
 
+def listProfs(request):
+
+    data = session.query(UserProfile).all()
